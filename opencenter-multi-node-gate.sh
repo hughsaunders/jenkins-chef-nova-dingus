@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+
+set -x
+set -e 
+set -u
+
+START_TIME=$(date +%s)
+INSTANCE_IMAGE=${INSTANCE_IMAGE:-jenkins-precise}
+
+source $(dirname $0)/chef-jenkins.sh
+
+REPO=${GIT_REPO%.git}
+REPO=${REPO#opencenter-}
+echo "Starting happy-path gate for a path in $REPO"
+
+init
+
+### Get the code to be merged ###
+
+cleanup(){
+    rm -rf ${GIT_REPO} || :
+}
+
+cleanup
+trap cleanup INT EXIT TERM
+
+# Clone the upstream repo
+if ! ( git clone ${GIT_SSH_URL} ); then
+    echo "Unable to clone git repo: ${GIT_CLONE_URL}"
+    exit 1
+fi
+
+pushd ${GIT_REPO}
+if ! ( git checkout ${GIT_BRANCH} ); then
+    echo "Unable to checkout branch: ${GIT_BRANCH}"
+    exit 1
+fi
+
+# Apply the proposed diff
+if ! ( curl -s -n ${GIT_DIFF_URL} | git apply ); then
+    echo "Unable to merge proposed patch: ${GIT_PATCH_URL}"
+    exit 1
+fi
+
+# Build a test cluster, on test infrastructure
+declare -a cluster
+cluster=(ocserver:jenkins-precise:roush node1:jenkins-precise:roush node2:jenkins-precise:roush node3:jenkins-precise:roush)
+
+boot_cluster ${cluster[@]}
+wait_for_cluster_ssh ${cluster[@]}
+
+# install opencenter-server
+x_with_server "Installing OpenCenter-Server" ocserver <<EOF
+curl -s "https://raw.github.com/rcbops/opencenter-install-scripts/sprint/install-dev.sh" | bash -s -- --role=server
+EOF
+background_task "fc_do"
+
+# install opencenter-agent
+x_with_cluster "Installing OpenCenter-Agent" node1 node2 node3 <<EOF
+curl -s "https://raw.github.com/rcbops/opencenter-install-scripts/sprint/install-dev.sh" | bash -s -- --role=agent --ip=$(ip_for_host ocserver)
+pushd ${GIT_REPO}
+if ! ( git checkout ${GIT_BRANCH} ); then
+    echo "Unable to checkout branch: ${GIT_BRANCH}"
+    exit 1
+fi
+
+# Apply the proposed diff
+if ! ( curl -s -n ${GIT_DIFF_URL} | git apply ); then
+    echo "Unable to merge proposed patch: ${GIT_PATCH_URL}"
+    exit 1
+fi
+popd
+EOF
+
+#push updated code to cluster. 
+curl 
+
+# make sure opencenter-server looks right
+x_with_server "Running Happy Path Tests" ocserver <<EOF
+#make_roush_log_dev_null
+#service roush restart
+
+apt-get install -y git
+cd /opt
+git clone https://github.com/hughsaunders/opencenter-testerator.git
+cd roush-testerator
+echo "export OPENCENTER_ENDPOINT=http://$(ip_for_host roush):8080" > localrc
+echo "export INSTANCE_SERVER_HOSTNAME=$(hostname_for_host node1).novalocal" >> localrc
+echo "export INSTANCE_CONTROLLER_HOSTNAME=$(hostname_for_host node2).novalocal" >> localrc
+echo "export INSTANCE_COMPUTE_HOSTNAME=$(hostname_for_host node3).novalocal" >> localrc
+source localrc; ./run_tests.sh -V
+EOF
+fc_do
+popd #GIT_REPO dir
