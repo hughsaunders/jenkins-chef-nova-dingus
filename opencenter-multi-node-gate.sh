@@ -2,7 +2,7 @@
 
 set -x
 set -e 
-set -u
+#set -u
 
 START_TIME=$(date +%s)
 INSTANCE_IMAGE=${INSTANCE_IMAGE:-jenkins-precise}
