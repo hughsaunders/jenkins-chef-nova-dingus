@@ -13,34 +13,7 @@ REPO=${GIT_REPO%.git}
 REPO=${REPO#opencenter-}
 echo "Starting happy-path gate for a path in $REPO"
 
-init
-
-### Get the code to be merged ###
-
-cleanup(){
-    rm -rf ${GIT_REPO} || :
-}
-
-cleanup
-trap cleanup INT EXIT TERM
-
-# Clone the upstream repo
-if ! ( git clone ${GIT_SSH_URL} ); then
-    echo "Unable to clone git repo: ${GIT_CLONE_URL}"
-    exit 1
-fi
-
-pushd ${GIT_REPO}
-if ! ( git checkout ${GIT_BRANCH} ); then
-    echo "Unable to checkout branch: ${GIT_BRANCH}"
-    exit 1
-fi
-
-# Apply the proposed diff
-if ! ( curl -s -n ${GIT_DIFF_URL} | git apply ); then
-    echo "Unable to merge proposed patch: ${GIT_PATCH_URL}"
-    exit 1
-fi
+init #set traps, read credentials etc
 
 # Build a test cluster, on test infrastructure
 declare -a cluster
@@ -57,23 +30,8 @@ background_task "fc_do"
 
 # install opencenter-agent
 x_with_cluster "Installing OpenCenter-Agent" node1 node2 node3 <<EOF
-curl -s "https://raw.github.com/rcbops/opencenter-install-scripts/sprint/install-dev.sh" | bash -s -- --role=agent --ip=$(ip_for_host ocserver)
-pushd ${GIT_REPO}
-if ! ( git checkout ${GIT_BRANCH} ); then
-    echo "Unable to checkout branch: ${GIT_BRANCH}"
-    exit 1
-fi
-
-# Apply the proposed diff
-if ! ( curl -s -n ${GIT_DIFF_URL} | git apply ); then
-    echo "Unable to merge proposed patch: ${GIT_PATCH_URL}"
-    exit 1
-fi
-popd
+curl -s "https://raw.github.com/rcbops/opencenter-install-scripts/sprint/install-dev.sh" | bash -s -- --role=agent --ip=$(ip_for_host ocserver) --$REPO-patch-url=$GIT_PATCH_URL
 EOF
-
-#push updated code to cluster. 
-curl 
 
 # make sure opencenter-server looks right
 x_with_server "Running Happy Path Tests" ocserver <<EOF
@@ -91,4 +49,3 @@ echo "export INSTANCE_COMPUTE_HOSTNAME=$(hostname_for_host node3).novalocal" >> 
 source localrc; ./run_tests.sh -V
 EOF
 fc_do
-popd #GIT_REPO dir
