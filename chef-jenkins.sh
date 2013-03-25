@@ -118,7 +118,7 @@ function init() {
     # an array called MISC_CREDENTIALS, with keys being
     # [service_user]=password
     #
-    if [ -e ${SOUCE_DIR}/files/credentials ]; then
+    if [ -e ${SOURCE_DIR}/files/credentials ]; then
         source ${SOURCE_DIR}/files/credentials
     fi
 
