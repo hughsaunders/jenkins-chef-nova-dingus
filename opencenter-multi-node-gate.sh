@@ -9,6 +9,10 @@ INSTANCE_IMAGE=${INSTANCE_IMAGE:-jenkins-precise}
 
 source $(dirname $0)/chef-jenkins.sh
 
+#environment variables must be declared when using set -u
+GIT_PATCH_URL=${GIT_PATCH_URL:-}
+GIT_REPO=${GIT_REPO:-}
+
 REPO=${GIT_REPO%.git}
 REPO=${REPO#opencenter-}
 echo "Starting happy-path gate for a path in $REPO"
