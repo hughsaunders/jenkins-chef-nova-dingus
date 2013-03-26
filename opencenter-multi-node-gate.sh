@@ -46,7 +46,7 @@ apt-get install -y git
 cd /opt
 git clone https://github.com/hughsaunders/opencenter-testerator.git
 cd opencenter-testerator
-echo "export OPENCENTER_ENDPOINT=http://$(ip_for_host roush):8080" > localrc
+echo "export OPENCENTER_ENDPOINT=http://$(ip_for_host ocserver):8080" > localrc
 echo "export INSTANCE_SERVER_HOSTNAME=$(hostname_for_host node1).novalocal" >> localrc
 echo "export INSTANCE_CONTROLLER_HOSTNAME=$(hostname_for_host node2).novalocal" >> localrc
 echo "export INSTANCE_COMPUTE_HOSTNAME=$(hostname_for_host node3).novalocal" >> localrc
