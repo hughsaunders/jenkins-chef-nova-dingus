@@ -40,7 +40,7 @@ EOF
 background_task "fc_do"
 
 # install opencenter-agent
-x_with_cluster "Installing OpenCenter-Agent" node1 node2 node3 node4 node 5<<EOF
+x_with_cluster "Installing OpenCenter-Agent" node1 node2 node3 node4 node5 <<EOF
 curl -s "https://raw.github.com/rcbops/opencenter-install-scripts/sprint/install-dev.sh" | bash -s -- --role=agent --ip=$(ip_for_host ocserver) --$REPO-patch-url=$GIT_PATCH_URL
 EOF
 
