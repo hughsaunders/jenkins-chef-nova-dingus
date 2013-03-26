@@ -76,9 +76,9 @@ keystone_admin_pw = secrete
 nova_vm_fixed_if = eth1
 nova_vm_fixed_range = 192.168.200.0/24
 EOCONFIG
-export OPENCENTER_CONFIG_DIR=\$(pwd)
+export OPENCENTER_CONFIG_DIR="\$(pwd)"
 export OPENCENTER_CONFIG="gate-config"
-export OPENCENTER_ENDPOINT=http://$(ip_for_host ocserver):8080" 
+export OPENCENTER_ENDPOINT="http://$(ip_for_host ocserver):8080" 
 ./run_tests.sh -V
 EOF
 fc_do
