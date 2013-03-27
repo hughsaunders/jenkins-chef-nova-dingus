@@ -54,6 +54,8 @@ cd /opt
 git clone https://github.com/john5223/opencenter-testerator.git
 cd opencenter-testerator
 cat > gate-config <<EOCONFIG
+ [test]
+\[test2\]
 [opencenter]
 endpoint_url = http://$(ip_for_host ocserver):8080
 instance_server_hostname = ocserver
