@@ -44,6 +44,11 @@ x_with_cluster "Installing OpenCenter-Agent" node1 node2 node3 node4 node5 <<EOF
 curl -s "https://raw.github.com/rcbops/opencenter-install-scripts/sprint/install-dev.sh" | bash -s -- --role=agent --ip=$(ip_for_host ocserver) --$REPO-patch-url=$GIT_PATCH_URL
 EOF
 
+function vip_for_host(){
+  hostname="$1"
+  ip_for_host $1 |sed 's/\.53\./.54./'
+}
+
 # make sure opencenter-server looks right
 x_with_server "Running Happy Path Tests" ocserver <<EOF
 #make_roush_log_dev_null
@@ -56,6 +61,10 @@ cd opencenter-testerator
 export OPENCENTER_CONFIG_DIR="\$(pwd)/etc"
 export OPENCENTER_CONFIG="opencenter-gate.conf"
 export OPENCENTER_ENDPOINT="http://$(ip_for_host ocserver):8080" 
+export nova_api_vip="\$(vip_for_host ocserver)"
+export nova_mysql_vip="\$(vip_for_host node1)"
+export nova_rabbitmq_vip="\$(vip_for_host node2)"
+
 ./run_tests.sh -V
 EOF
 fc_do
