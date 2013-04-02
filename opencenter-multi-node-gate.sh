@@ -35,7 +35,7 @@ wait_for_cluster_ssh ${cluster[@]}
 
 # install opencenter-server
 x_with_server "Installing OpenCenter-Server" ocserver <<EOF
-curl -s "https://raw.github.com/rcbops/opencenter-install-scripts/sprint/install-dev.sh" | bash -s -- --role=server
+curl -s "https://raw.github.com/rcbops/opencenter-install-scripts/sprint/install-dev.sh" | bash -s -- --role=server --$REPO-patch-url=$GIT_PATCH_URL
 EOF
 background_task "fc_do"
 
