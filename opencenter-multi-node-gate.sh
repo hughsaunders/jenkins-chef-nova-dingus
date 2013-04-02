@@ -61,9 +61,9 @@ cd opencenter-testerator
 export OPENCENTER_CONFIG_DIR="\$(pwd)/etc"
 export OPENCENTER_CONFIG="opencenter-gate.conf"
 export OPENCENTER_ENDPOINT="http://$(ip_for_host ocserver):8080" 
-export nova_api_vip="\$(vip_for_host ocserver)"
-export nova_mysql_vip="\$(vip_for_host node1)"
-export nova_rabbitmq_vip="\$(vip_for_host node2)"
+export nova_api_vip="$(vip_for_host ocserver)"
+export nova_mysql_vip="$(vip_for_host node1)"
+export nova_rabbitmq_vip="$(vip_for_host node2)"
 
 ./run_tests.sh -V
 EOF
